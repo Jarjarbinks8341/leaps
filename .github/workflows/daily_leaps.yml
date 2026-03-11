@@ -1,0 +1,33 @@
+name: Daily LEAPS Analysis
+
+on:
+  schedule:
+    - cron: '0 15 * * 1-5' # Mon-Fri at 10 AM ET
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas numpy matplotlib
+
+      - name: Run Analysis
+        run: python analyze_assets.py
+
+      - name: Update Daily Report
+        run: |
+          git config --global user.name 'LEAPS-Bot'
+          git config --global user.email 'leaps-bot@users.noreply.github.com'
+          git add DAILY_REPORT.md
+          git commit -m "Auto-update Daily Diagnosis: $(date +'%Y-%m-%d')" || exit 0
+          git push
