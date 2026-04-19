@@ -1,33 +1,28 @@
-name: Daily LEAPS Analysis
+name: Daily QQQ LEAPS Signal
 
 on:
   schedule:
-    - cron: '0 15 * * 1-5' # Mon-Fri at 10 AM ET
-  workflow_dispatch: # Allow manual trigger
+    - cron: '0 15 * * 1-5' # 15:00 UTC Mon-Fri — 11:00 AM ET in DST / 10:00 AM ET in standard time. The script itself gates on NYSE holidays, so this just prunes obvious weekends.
+  workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          pip install yfinance pandas numpy matplotlib
+      - run: uv run qqq_leaps.py
 
-      - name: Run Analysis
-        run: python analyze_assets.py
-
-      - name: Update Daily Report
+      - name: Commit report + IV history
         run: |
           git config --global user.name 'LEAPS-Bot'
           git config --global user.email 'leaps-bot@users.noreply.github.com'
-          git add DAILY_REPORT.md
-          git commit -m "Auto-update Daily Diagnosis: $(date +'%Y-%m-%d')" || exit 0
+          git add DAILY_REPORT.md stock_prices.db
+          git diff --cached --quiet || git commit -m "Daily QQQ LEAPS signal: $(date -u +'%Y-%m-%d')"
           git push
