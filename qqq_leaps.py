@@ -67,15 +67,10 @@ def send_gmail(subject: str, body: str) -> bool:
     msg["Subject"] = subject
     msg["From"] = f"QQQ LEAPS Bot <{user}>"
     msg["To"] = to
-    import traceback as _tb
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
-            s.login(user, pw)
-            s.send_message(msg)
-        return True
-    except Exception:
-        _tb.print_exc()
-        return False
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
+        s.login(user, pw)
+        s.send_message(msg)
+    return True
 
 
 def nyse_open_today() -> bool:
