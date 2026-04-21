@@ -32,7 +32,7 @@ import ssl
 import warnings
 from dataclasses import dataclass
 from datetime import date, datetime
-from email.message import EmailMessage
+from email.mime.text import MIMEText
 from math import erf, exp, log, sqrt
 
 import numpy as np
@@ -63,11 +63,10 @@ def send_gmail(subject: str, body: str) -> bool:
     if missing:
         print(f"Email skipped — missing env vars: {', '.join(missing)}")
         return False
-    msg = EmailMessage()
+    msg = MIMEText(body.replace('\xa0', ' '), 'plain', 'utf-8')
     msg["Subject"] = subject
     msg["From"] = f"QQQ LEAPS Bot <{user}>"
     msg["To"] = to
-    msg.set_content(body.replace('\xa0', ' '), charset="utf-8")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
         s.login(user, pw)
         s.send_message(msg)
