@@ -67,7 +67,7 @@ def send_gmail(subject: str, body: str) -> bool:
     msg["Subject"] = subject
     msg["From"] = f"QQQ LEAPS Bot <{user}>"
     msg["To"] = to
-    msg.set_content(body)
+    msg.set_content(body, charset="utf-8")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
         s.login(user, pw)
         s.send_message(msg)
