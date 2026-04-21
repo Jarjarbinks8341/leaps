@@ -12,6 +12,7 @@ jobs:
       contents: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'  # setup-uv@v5 still ships Node 20
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v5
 
