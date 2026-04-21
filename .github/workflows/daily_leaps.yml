@@ -21,6 +21,10 @@ jobs:
           cache-dependency-glob: qqq_leaps.py  # PEP 723 deps live inline here
 
       - run: uv run qqq_leaps.py
+        env:
+          SMTP_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
 
       - name: Commit report + IV history
         run: |
