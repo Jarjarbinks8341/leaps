@@ -25,10 +25,14 @@ the percentile becomes meaningful as history grows.
 
 from __future__ import annotations
 
+import os
+import smtplib
 import sqlite3
+import ssl
 import warnings
 from dataclasses import dataclass
 from datetime import date, datetime
+from email.message import EmailMessage
 from math import erf, exp, log, sqrt
 
 import numpy as np
@@ -48,6 +52,26 @@ TARGET_DELTA = 0.80
 IV_TARGET_DTE = 30
 IV_PERCENTILE_LOOKBACK = 252
 IV_PERCENTILE_MIN_HISTORY = 20
+
+
+def send_gmail(subject: str, body: str) -> bool:
+    """Send plain-text email via Gmail SMTP. Skips silently if creds absent."""
+    user = os.environ.get("SMTP_USERNAME")
+    pw = os.environ.get("SMTP_PASSWORD")
+    to = os.environ.get("NOTIFY_TO") or user
+    missing = [n for n, v in [("SMTP_USERNAME", user), ("SMTP_PASSWORD", pw), ("NOTIFY_TO", to)] if not v]
+    if missing:
+        print(f"Email skipped — missing env vars: {', '.join(missing)}")
+        return False
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = f"QQQ LEAPS Bot <{user}>"
+    msg["To"] = to
+    msg.set_content(body)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
+        s.login(user, pw)
+        s.send_message(msg)
+    return True
 
 
 def nyse_open_today() -> bool:
@@ -324,13 +348,18 @@ def main() -> None:
     leaps = find_leaps_candidate(asset, price)
     earnings = upcoming_earnings()
 
-    report, _ = build_report(
+    report, verdict = build_report(
         price, ma50, ma200, rsi, high_52w, drawdown_pct,
         iv30, iv30_exp, iv_pct, iv_hist_n, earnings, leaps,
     )
     with open("DAILY_REPORT.md", "w") as f:
         f.write(report)
     print(report)
+
+    today_iso = date.today().isoformat()
+    subject = f"[QQQ LEAPS] {verdict} {today_iso} — ${price:.2f} / drawdown {drawdown_pct:+.1f}%"
+    if send_gmail(subject, report):
+        print(f"Emailed to {os.environ.get('NOTIFY_TO') or os.environ.get('SMTP_USERNAME')}")
 
 
 if __name__ == "__main__":
