@@ -67,7 +67,7 @@ def send_gmail(subject: str, body: str) -> bool:
     msg["Subject"] = subject
     msg["From"] = f"QQQ LEAPS Bot <{user}>"
     msg["To"] = to
-    msg.set_content(body, charset="utf-8")
+    msg.set_content(body.replace('\xa0', ' '), charset="utf-8")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
         s.login(user, pw)
         s.send_message(msg)
@@ -357,7 +357,7 @@ def main() -> None:
     print(report)
 
     today_iso = date.today().isoformat()
-    subject = f"[QQQ LEAPS] {verdict} {today_iso} — ${price:.2f} / drawdown {drawdown_pct:+.1f}%"
+    subject = f"[QQQ LEAPS] {verdict} {today_iso} - ${price:.2f} / drawdown {drawdown_pct:+.1f}%"
     if send_gmail(subject, report):
         print(f"Emailed to {os.environ.get('NOTIFY_TO') or os.environ.get('SMTP_USERNAME')}")
 
