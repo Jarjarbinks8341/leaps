@@ -33,7 +33,7 @@ import warnings
 from dataclasses import dataclass
 from datetime import date, datetime
 from email.mime.text import MIMEText
-from math import erf, exp, log, sqrt
+from math import erf, exp, isnan, log, sqrt
 
 import numpy as np
 import pandas as pd
@@ -59,6 +59,7 @@ TARGET_DELTA = 0.80
 IV_TARGET_DTE = 30
 IV_PERCENTILE_LOOKBACK = 252
 IV_PERCENTILE_MIN_HISTORY = 20
+RSI_ENTRY_MAX = 50
 
 
 def send_gmail(subject: str, body: str) -> bool:
@@ -279,6 +280,7 @@ def build_report(ticker: str,
     price_ok = drawdown_ok or ma200_ok
     iv_ok = iv_pct is not None and iv_pct < 25
     earnings_ok = not earnings
+    rsi_ok = not isnan(rsi) and rsi < RSI_ENTRY_MAX
 
     checks.append((
         f"Price cheap: drawdown {drawdown_pct:+.1f}% (need <=-10%) "
@@ -300,7 +302,9 @@ def build_report(ticker: str,
         else:
             checks.append((f"No earnings in {EARNINGS_BLACKOUT_DAYS}d", True))
 
-    verdict = "BUY" if (price_ok and iv_ok and earnings_ok) else "WAIT"
+    checks.append((f"RSI14 {rsi:.1f} < {RSI_ENTRY_MAX} (momentum not extended)", rsi_ok))
+
+    verdict = "BUY" if (price_ok and iv_ok and earnings_ok and rsi_ok) else "WAIT"
 
     today = datetime.now().strftime("%Y-%m-%d")
     lines = [
