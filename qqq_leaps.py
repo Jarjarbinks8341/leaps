@@ -43,7 +43,7 @@ import yfinance as yf
 warnings.filterwarnings("ignore")
 
 DB_PATH = "stock_prices.db"
-TICKERS = ["QQQ", "AAPL", "MSFT", "BRK-B"]
+TICKERS = ["QQQ", "AAPL", "MSFT", "BRK-B", "META"]
 MEGA_CAPS = ["MSFT", "AAPL", "NVDA", "GOOGL", "AMZN", "META"]
 # Earnings tickers to check per asset. Empty list = skip earnings check.
 EARNINGS_SOURCES: dict[str, list[str]] = {
@@ -51,6 +51,7 @@ EARNINGS_SOURCES: dict[str, list[str]] = {
     "AAPL":  ["AAPL"],
     "MSFT":  ["MSFT"],
     "BRK-B": [],        # Berkshire earnings not reliably in yfinance
+    "META":  ["META"],
 }
 EARNINGS_BLACKOUT_DAYS = 14
 RISK_FREE_RATE = 0.045
