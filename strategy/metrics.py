@@ -78,9 +78,10 @@ def score(
 
     Normalizes each metric to a comparable scale before weighting.
     Higher is always better (max_dd is negated).
+    Weights: cagr=0.35, neg_dd=0.30, sharpe=0.25, calmar=0.10
     """
     if weights is None:
-        weights = {"cagr": 0.40, "neg_dd": 0.30, "sharpe": 0.20, "calmar": 0.10}
+        weights = {"cagr": 0.35, "neg_dd": 0.30, "sharpe": 0.25, "calmar": 0.10}
 
     c = cagr(curve)
     dd = max_drawdown(curve)

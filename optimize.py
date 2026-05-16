@@ -19,7 +19,7 @@ from backtest import run, DEFAULT_PARAMS
 
 PARAM_GRID: dict[str, list] = {
     "macd_fast":    [8, 10, 12, 16],
-    "macd_slow":    [20, 24, 26, 30],
+    "macd_slow":    [24, 26, 28, 30],
     "macd_sig":     [7, 9, 12],
     "div_lookback": [10, 15, 20, 25],
     "div_min_gap":  [3, 5, 7],
@@ -42,6 +42,7 @@ def _valid(p: dict) -> bool:
     """First-principles constraints: reject logically impossible configs."""
     return (
         p["macd_fast"] < p["macd_slow"]
+        and (p["macd_slow"] - p["macd_fast"]) >= 16
         and p["div_min_gap"] < p["div_lookback"] // 2
         and p["tier1_months"] < p["tier2_months"]
         and p["tier2_months"] < p["tier3_months"]
@@ -97,9 +98,9 @@ def _sample_refine(neighborhood: dict) -> dict:
 
 
 def _run_one(args_tuple) -> tuple[float, dict, dict] | None:
-    params, start, end = args_tuple
+    params, start, end, ticker = args_tuple
     try:
-        m = run(params, start, end)
+        m = run(params, start, end, ticker=ticker)
         return (m["score"], params, m)
     except Exception:
         return None
@@ -111,11 +112,12 @@ def search(
     train_end: str = "2024-12-31",
     workers: int = 1,
     neighborhood: dict | None = None,
+    ticker: str = "QQQ",
 ) -> list[tuple[float, dict, dict]]:
     """Run random search, return results sorted best-first."""
-    data = load()
+    data = load(ticker=ticker)
     sampler = (lambda: _sample_refine(neighborhood)) if neighborhood else _sample
-    jobs = [(sampler(), train_start, train_end) for _ in range(n)]
+    jobs = [(sampler(), train_start, train_end, ticker) for _ in range(n)]
 
     # Pre-load data into each worker by passing it directly (single-process path)
     # For multi-process we rely on the parquet cache being present on disk.
@@ -123,8 +125,7 @@ def search(
 
     if workers <= 1:
         for i, job in enumerate(jobs, 1):
-            params, start, end = job
-            result = _run_one((params, start, end))
+            result = _run_one(job)
             if result:
                 results.append(result)
             if i % 20 == 0:
@@ -155,6 +156,7 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=1, help="Parallel workers")
     parser.add_argument("--out", default="best_params.json", help="Output path for best params")
     parser.add_argument("--refine", help="Refine search around params from this JSON file")
+    parser.add_argument("--ticker", default="QQQ", help="Underlying ticker (default: QQQ)")
     args = parser.parse_args()
 
     neighborhood = None
@@ -165,9 +167,9 @@ def main() -> None:
         print(f"Refining around {args.refine}")
 
     print(f"Starting {'refine' if neighborhood else 'random'} search: {args.n} trials, {args.workers} worker(s)")
-    print(f"Training period: {args.train_start} → {args.train_end}\n")
+    print(f"Ticker: {args.ticker}  |  Training period: {args.train_start} → {args.train_end}\n")
 
-    results = search(args.n, args.train_start, args.train_end, args.workers, neighborhood)
+    results = search(args.n, args.train_start, args.train_end, args.workers, neighborhood, args.ticker)
 
     if not results:
         print("No valid results. Check data and constraints.")
@@ -191,7 +193,7 @@ def main() -> None:
     with open(args.out, "w") as f:
         json.dump(best_params, f, indent=2)
     print(f"\nSaved to {args.out}")
-    print(f"Run: uv run backtest.py --params {args.out}")
+    print(f"Run: uv run backtest.py --ticker {args.ticker} --params {args.out}")
 
 
 if __name__ == "__main__":

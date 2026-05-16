@@ -13,6 +13,7 @@ class Trade(NamedTuple):
     exit_premium: float
     pnl_pct: float
     reason: str
+    shares: float = 0.0
 
 
 @dataclass
@@ -82,7 +83,7 @@ class Portfolio:
         pnl = (exit_premium - pos.entry_premium) / pos.entry_premium
         self.cash += proceeds
         self.positions.remove(pos)
-        self.trades.append(Trade(pos.entry_date, d, pos.entry_premium, exit_premium, pnl, reason))
+        self.trades.append(Trade(pos.entry_date, d, pos.entry_premium, exit_premium, pnl, reason, pos.shares))
 
     # ── daily step ─────────────────────────────────────────────────────────────
 

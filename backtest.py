@@ -80,11 +80,12 @@ def run(
     m = summary(pf.curve, pf.trades)
     m["curve"] = pf.curve
     m["trades"] = pf.trades
+    m["positions"] = pf.positions
     m["score"] = score(pf.curve, pf.trades)
     return m
 
 
-def _print_report(m: dict, params: dict, start: str, end: str) -> None:
+def _print_report(m: dict, params: dict, start: str, end: str, show_trades: bool = False) -> None:
     print(f"\n{'─' * 52}")
     print(f"  QQQ LEAPS Backtest  {start} → {end}")
     print(f"{'─' * 52}")
@@ -107,6 +108,32 @@ def _print_report(m: dict, params: dict, start: str, end: str) -> None:
             print(f"    {reason:<14} {cnt:>4} trades")
         print(f"{'─' * 52}")
 
+    if show_trades and m["trades"]:
+        print(f"\n  {'#':>3}  {'Entry':10}  {'Exit':10}  {'Contracts':>9}  {'Entry$':>8}  {'Exit$':>8}  {'P&L':>7}  {'Cost':>10}  Reason")
+        print(f"  {'─'*3}  {'─'*10}  {'─'*10}  {'─'*9}  {'─'*8}  {'─'*8}  {'─'*7}  {'─'*10}  {'─'*6}")
+        for i, t in enumerate(m["trades"], 1):
+            sign = "+" if t.pnl_pct >= 0 else ""
+            entry = str(t.entry_date)[:10]
+            exit_ = str(t.exit_date)[:10]
+            contracts = t.shares / 100
+            cost = t.entry_premium * t.shares
+            print(
+                f"  {i:>3}  {entry:10}  {exit_:10}  {contracts:>9.1f}  "
+                f"${t.entry_premium:>7.2f}  ${t.exit_premium:>7.2f}  "
+                f"{sign}{t.pnl_pct:>6.1%}  ${cost:>9,.0f}  {t.reason}"
+            )
+        print(f"  {'─'*3}  {'─'*10}  {'─'*10}  {'─'*9}  {'─'*8}  {'─'*8}  {'─'*7}  {'─'*10}  {'─'*6}")
+
+    if show_trades and m.get("positions"):
+        print(f"\n  Open positions on {end}:")
+        print(f"  {'Entry':10}  {'Expiry':10}  {'Strike':>8}  {'Entry$':>8}  {'Unrealized':>10}")
+        print(f"  {'─'*10}  {'─'*10}  {'─'*8}  {'─'*8}  {'─'*10}")
+        for pos in m["positions"]:
+            print(
+                f"  {str(pos.entry_date)[:10]:10}  {str(pos.expiry_date)[:10]:10}  "
+                f"${pos.strike:>7.1f}  ${pos.entry_premium:>7.2f}  (still open)"
+            )
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="QQQ LEAPS backtest")
@@ -115,6 +142,7 @@ def main() -> None:
     parser.add_argument("--refresh", action="store_true", help="Re-download price data")
     parser.add_argument("--params", help="JSON file with parameter overrides")
     parser.add_argument("--ticker", default="QQQ", help="Underlying ticker (default: QQQ)")
+    parser.add_argument("--trades", action="store_true", help="Print individual trade log")
     args = parser.parse_args()
 
     params = dict(DEFAULT_PARAMS)
@@ -128,7 +156,7 @@ def main() -> None:
 
     print(f"Running backtest {args.start} → {args.end}…")
     m = run(params, args.start, args.end, data, ticker=args.ticker)
-    _print_report(m, params, args.start, args.end)
+    _print_report(m, params, args.start, args.end, show_trades=args.trades)
 
 
 if __name__ == "__main__":
