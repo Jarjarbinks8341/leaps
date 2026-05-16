@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+backtest_cache*.parquet
+params_4x20.json
+params_5x16.json
+best_params_80.json
+best_params.json
+best_params_v2.json

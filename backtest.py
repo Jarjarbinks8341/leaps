@@ -1,0 +1,135 @@
+"""QQQ LEAPS Backtest — MACD Bullish Divergence + VIX elevation strategy.
+
+Usage:
+    uv run backtest.py                                    # default params, train period
+    uv run backtest.py --start 2025-01-01                 # OOS test
+    uv run backtest.py --refresh                          # re-download data
+    uv run backtest.py --params best_params.json          # load params from optimizer
+"""
+import argparse
+import json
+import sys
+from datetime import date
+
+from strategy.data import load
+from strategy.metrics import summary, score
+from strategy.options import realized_vol
+from strategy.portfolio import Portfolio
+from strategy.signals import compute_macd, bullish_divergence, vix_elevated
+
+DEFAULT_PARAMS: dict = {
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_sig": 9,
+    "div_lookback": 20,
+    "div_min_gap": 5,
+    "vix_ma": 20,
+    "target_delta": 0.60,
+    "dte_days": 365,
+    "max_pos": 5,
+    "pos_pct": 0.05,
+    "tier1_months": 4,
+    "tier1_profit": 0.50,
+    "tier2_months": 6,
+    "tier2_profit": 0.30,
+    "tier3_months": 9,
+    "tier3_profit": 0.10,
+    "force_months": 9,
+}
+
+INITIAL_CASH = 100_000.0
+
+
+def run(
+    params: dict | None = None,
+    start: str = "2015-01-01",
+    end: str = "2024-12-31",
+    data=None,
+    refresh: bool = False,
+    ticker: str = "QQQ",
+) -> dict:
+    """Run a full backtest. Returns metrics dict including curve and trades."""
+    if params is None:
+        params = DEFAULT_PARAMS
+    if data is None:
+        data = load(refresh=refresh, ticker=ticker)
+
+    _, _, hist = compute_macd(data["qqq"], params["macd_fast"], params["macd_slow"], params["macd_sig"])
+
+    pf = Portfolio(INITIAL_CASH, params["max_pos"], params["pos_pct"])
+
+    sub = data.loc[start:end]
+    warmup = params["macd_slow"] + params["div_lookback"] + 5
+
+    for i, (d, row) in enumerate(sub.iterrows()):
+        global_i = data.index.get_loc(d)
+        S = float(row["qqq"])
+        sigma = realized_vol(data["qqq"].iloc[: global_i + 1])
+
+        signal = False
+        if global_i >= warmup:
+            p_win = data["qqq"].iloc[global_i - params["div_lookback"] : global_i + 1]
+            h_win = hist.iloc[global_i - params["div_lookback"] : global_i + 1]
+            v_win = data["vix"].iloc[: global_i + 1]
+            signal = bullish_divergence(
+                p_win, h_win, params["div_lookback"], params["div_min_gap"]
+            ) and vix_elevated(v_win, params["vix_ma"])
+
+        pf.step(d, S, sigma, signal, params)
+
+    m = summary(pf.curve, pf.trades)
+    m["curve"] = pf.curve
+    m["trades"] = pf.trades
+    m["score"] = score(pf.curve, pf.trades)
+    return m
+
+
+def _print_report(m: dict, params: dict, start: str, end: str) -> None:
+    print(f"\n{'─' * 52}")
+    print(f"  QQQ LEAPS Backtest  {start} → {end}")
+    print(f"{'─' * 52}")
+    print(f"  Final Value   ${m['final_value']:>12,.0f}   (start ${INITIAL_CASH:,.0f})")
+    print(f"  CAGR          {m['cagr']:>11.1%}")
+    print(f"  Max Drawdown  {m['max_dd']:>11.1%}")
+    print(f"  Sharpe        {m['sharpe']:>12.2f}")
+    print(f"  Calmar        {m['calmar']:>12.2f}")
+    print(f"  Win Rate      {m['win_rate']:>11.1%}")
+    print(f"  # Trades      {m['n_trades']:>12d}")
+    print(f"  Score         {m['score']:>12.4f}")
+    print(f"{'─' * 52}")
+
+    if m["trades"]:
+        by_reason: dict[str, int] = {}
+        for t in m["trades"]:
+            by_reason[t.reason] = by_reason.get(t.reason, 0) + 1
+        print("  Exit reasons:")
+        for reason, cnt in sorted(by_reason.items(), key=lambda x: -x[1]):
+            print(f"    {reason:<14} {cnt:>4} trades")
+        print(f"{'─' * 52}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="QQQ LEAPS backtest")
+    parser.add_argument("--start", default="2015-01-01")
+    parser.add_argument("--end", default="2024-12-31")
+    parser.add_argument("--refresh", action="store_true", help="Re-download price data")
+    parser.add_argument("--params", help="JSON file with parameter overrides")
+    parser.add_argument("--ticker", default="QQQ", help="Underlying ticker (default: QQQ)")
+    args = parser.parse_args()
+
+    params = dict(DEFAULT_PARAMS)
+    if args.params:
+        with open(args.params) as f:
+            params.update(json.load(f))
+
+    print(f"Loading data for {args.ticker}…")
+    data = load(refresh=args.refresh, ticker=args.ticker)
+    print(f"Data: {data.index[0].date()} → {data.index[-1].date()}  ({len(data)} days)")
+
+    print(f"Running backtest {args.start} → {args.end}…")
+    m = run(params, args.start, args.end, data, ticker=args.ticker)
+    _print_report(m, params, args.start, args.end)
+
+
+if __name__ == "__main__":
+    main()
