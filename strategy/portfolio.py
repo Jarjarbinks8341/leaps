@@ -71,8 +71,11 @@ class Portfolio:
         budget = min(nav * self.pos_pct, self.cash * 0.99)
         if budget < premium:
             return False
-        shares = budget / premium
-        self.cash -= budget
+        contracts = int(budget / premium / 100)  # whole contracts only
+        if contracts < 1:
+            return False
+        shares = contracts * 100
+        self.cash -= shares * premium
         expiry = d + timedelta(days=dte_days)
         self.positions.append(Position(d, expiry, K, premium, shares))
         return True
