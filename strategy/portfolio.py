@@ -142,6 +142,8 @@ def _exit_reason(months: float, pnl: float, p: dict) -> str | None:
     """Return exit reason string or None if position should be held."""
     if months > p["force_months"]:
         return "force"
+    if months < p.get("min_hold_months", 0):
+        return None
     if months <= p["tier1_months"] and pnl >= p["tier1_profit"]:
         return "tp1"
     if months <= p["tier2_months"] and pnl >= p["tier2_profit"]:

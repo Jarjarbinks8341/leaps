@@ -29,6 +29,7 @@ DEFAULT_PARAMS: dict = {
     "lot_pct": 0.05,
     "lot_pct_max": 0.15,
     "min_months_remaining": 6,
+    "min_hold_months": 3,
     "neg_hist": True,
     "tier1_months": 4,
     "tier1_profit": 0.50,
