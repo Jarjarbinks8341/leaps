@@ -32,7 +32,7 @@ from strategy.options import call_price, realized_vol, strike_for_delta
 from strategy.portfolio import _exit_reason
 from strategy.signals import bullish_divergence, compute_macd, signal_strength, vix_elevated
 
-PARAMS_FILE = "best_params_v9r.json"
+PARAMS_FILE = "best_params_v9r_partial.json"
 POSITIONS_FILE = "positions.json"
 REPORT_FILE = "LEAPS_REPORT.md"
 
