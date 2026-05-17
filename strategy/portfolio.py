@@ -22,14 +22,21 @@ class Position:
     expiry_date: date
     strike: float
     entry_premium: float   # BSM price per share at entry
-    shares: float          # notional shares = cost / entry_premium
+    shares: float          # whole number: lot_size * 100
 
     @property
     def cost(self) -> float:
         return self.entry_premium * self.shares
 
+    @property
+    def contracts(self) -> int:
+        return int(self.shares // 100)
+
     def months_held(self, d: date) -> float:
         return (d - self.entry_date).days / 30.44
+
+    def months_to_expiry(self, d: date) -> float:
+        return max((self.expiry_date - d).days, 0) / 30.44
 
     def tte_years(self, d: date) -> float:
         return max((self.expiry_date - d).days, 0) / 365.0
@@ -46,10 +53,10 @@ class Position:
 
 
 class Portfolio:
-    def __init__(self, cash: float, max_pos: int, pos_pct: float):
+    def __init__(self, cash: float, lot_size: int = 2, max_deploy_pct: float = 0.80):
         self.cash = cash
-        self.max_pos = max_pos
-        self.pos_pct = pos_pct
+        self.lot_size = lot_size            # contracts per signal
+        self.max_deploy_pct = max_deploy_pct  # max fraction of NAV in options
         self.positions: list[Position] = []
         self.trades: list[Trade] = []
         self.curve: list[tuple[date, float]] = []
@@ -59,25 +66,24 @@ class Portfolio:
     def nav(self, d: date, S: float, sigma: float) -> float:
         return self.cash + sum(p.current_value(d, S, sigma) for p in self.positions)
 
+    def option_value(self, d: date, S: float, sigma: float) -> float:
+        return sum(p.current_value(d, S, sigma) for p in self.positions)
+
     # ── open / close ───────────────────────────────────────────────────────────
 
-    def _open(self, d: date, S: float, sigma: float, nav: float,
-              target_delta: float, dte_days: int) -> bool:
-        T = dte_days / 365.0
-        K = strike_for_delta(S, T, sigma, target_delta)
+    def _open(self, d: date, S: float, sigma: float, params: dict) -> bool:
+        lot = int(params.get("lot_size", self.lot_size))
+        T = params["dte_days"] / 365.0
+        K = strike_for_delta(S, T, sigma, params["target_delta"])
         premium = call_price(S, K, T, sigma)
         if premium <= 0:
             return False
-        budget = min(nav * self.pos_pct, self.cash * 0.99)
-        if budget < premium:
+        cost = lot * 100 * premium
+        if self.cash < cost:
             return False
-        contracts = int(budget / premium / 100)  # whole contracts only
-        if contracts < 1:
-            return False
-        shares = contracts * 100
-        self.cash -= shares * premium
-        expiry = d + timedelta(days=dte_days)
-        self.positions.append(Position(d, expiry, K, premium, shares))
+        self.cash -= cost
+        expiry = d + timedelta(days=params["dte_days"])
+        self.positions.append(Position(d, expiry, K, premium, lot * 100))
         return True
 
     def _close(self, pos: Position, d: date, S: float, sigma: float, reason: str):
@@ -92,7 +98,16 @@ class Portfolio:
 
     def step(self, d: date, S: float, sigma: float, signal: bool, params: dict) -> float:
         """Process one trading day. Returns end-of-day NAV."""
-        # 1. Tiered exits
+        lot       = int(params.get("lot_size", self.lot_size))
+        max_dep   = params.get("max_deploy_pct", self.max_deploy_pct)
+        min_rem   = params.get("min_months_remaining", 6)
+
+        # 1. DTE exit: proactively sell when < min_months_remaining to expiry
+        for pos in list(self.positions):
+            if pos.months_to_expiry(d) < min_rem:
+                self._close(pos, d, S, sigma, "dte")
+
+        # 2. Tiered profit / force exits
         for pos in list(self.positions):
             months = pos.months_held(d)
             pnl = pos.pnl_pct(d, S, sigma)
@@ -100,20 +115,25 @@ class Portfolio:
             if reason:
                 self._close(pos, d, S, sigma, reason)
 
-        # 2. Record NAV
+        # 3. Record NAV
         current_nav = self.nav(d, S, sigma)
         self.curve.append((d, current_nav))
 
-        # 3. Entry logic
+        # 4. Entry: deploy new lot if signal fires and capacity allows
         if signal:
-            if len(self.positions) < self.max_pos:
-                self._open(d, S, sigma, current_nav, params["target_delta"], params["dte_days"])
-            else:
-                # FIFO: sell oldest, buy fresh
+            T = params["dte_days"] / 365.0
+            K = strike_for_delta(S, T, sigma, params["target_delta"])
+            premium = call_price(S, K, T, sigma)
+            lot_cost = lot * 100 * premium
+
+            # FIFO-rotate oldest until there's room under the 80% cap
+            while (self.option_value(d, S, sigma) + lot_cost > current_nav * max_dep
+                   and self.positions):
                 oldest = min(self.positions, key=lambda p: p.entry_date)
                 self._close(oldest, d, S, sigma, "fifo")
-                fresh_nav = self.nav(d, S, sigma)
-                self._open(d, S, sigma, fresh_nav, params["target_delta"], params["dte_days"])
+
+            if self.option_value(d, S, sigma) + lot_cost <= current_nav * max_dep:
+                self._open(d, S, sigma, params)
 
         return self.nav(d, S, sigma)
 

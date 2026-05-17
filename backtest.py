@@ -26,8 +26,9 @@ DEFAULT_PARAMS: dict = {
     "vix_ma": 20,
     "target_delta": 0.60,
     "dte_days": 365,
-    "max_pos": 5,
-    "pos_pct": 0.05,
+    "lot_size": 2,
+    "min_months_remaining": 6,
+    "neg_hist": True,
     "tier1_months": 4,
     "tier1_profit": 0.50,
     "tier2_months": 6,
@@ -56,7 +57,7 @@ def run(
 
     _, _, hist = compute_macd(data["qqq"], params["macd_fast"], params["macd_slow"], params["macd_sig"])
 
-    pf = Portfolio(INITIAL_CASH, params["max_pos"], params["pos_pct"])
+    pf = Portfolio(INITIAL_CASH, params["lot_size"])
 
     sub = data.loc[start:end]
     warmup = params["macd_slow"] + params["div_lookback"] + 5
@@ -72,7 +73,8 @@ def run(
             h_win = hist.iloc[global_i - params["div_lookback"] : global_i + 1]
             v_win = data["vix"].iloc[: global_i + 1]
             signal = bullish_divergence(
-                p_win, h_win, params["div_lookback"], params["div_min_gap"]
+                p_win, h_win, params["div_lookback"], params["div_min_gap"],
+                neg_hist=params.get("neg_hist", True),
             ) and vix_elevated(v_win, params["vix_ma"])
 
         pf.step(d, S, sigma, signal, params)

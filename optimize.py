@@ -26,8 +26,9 @@ PARAM_GRID: dict[str, list] = {
     "vix_ma":       [10, 20, 30],
     "target_delta": [0.50, 0.55, 0.60, 0.65, 0.70],
     "dte_days":     [300, 330, 365, 400, 430],
-    "max_pos":      [3, 4, 5, 6, 8],
-    "pos_pct":      [0.05, 0.10, 0.15, 0.20, 0.25],
+    "lot_size":             [1, 2, 3, 4, 5],
+    "min_months_remaining": [3, 4, 5, 6],
+    "neg_hist":             [True, False],
     "tier1_months": [3, 4, 5],
     "tier1_profit": [0.30, 0.40, 0.50, 0.60],
     "tier2_months": [5, 6, 7],
@@ -47,7 +48,7 @@ def _valid(p: dict) -> bool:
         and p["tier1_months"] < p["tier2_months"]
         and p["tier2_months"] < p["tier3_months"]
         and p["tier3_months"] <= p["force_months"]
-        and p["max_pos"] * p["pos_pct"] <= 0.80  # cap deployment at 80%
+        and p["lot_size"] >= 1
     )
 
 
@@ -76,8 +77,9 @@ def _make_neighborhood(base: dict) -> dict[str, list]:
         "vix_ma":       _ints(base["vix_ma"],       [-10, -5, 0, 5, 10], lo=5),
         "target_delta": _floats(base["target_delta"], [-0.10, -0.05, 0, 0.05, 0.10], lo=0.30, hi=0.85),
         "dte_days":     _ints(base["dte_days"],     [-60, -30, 0, 30, 60], lo=180),
-        "max_pos":      _ints(base["max_pos"],      [-1, 0, 1, 2], lo=2),
-        "pos_pct":      _floats(base["pos_pct"],    [-0.05, -0.03, -0.01, 0, 0.01, 0.03, 0.05], lo=0.03, hi=0.40),
+        "lot_size":             _ints(base["lot_size"],             [-1, 0, 1, 2], lo=1),
+        "min_months_remaining": _ints(base["min_months_remaining"], [-2, -1, 0, 1, 2], lo=1),
+        "neg_hist":             [True, False],
         "tier1_months": _ints(base["tier1_months"], [-1, 0, 1], lo=2),
         "tier1_profit": _floats(base["tier1_profit"], [-0.10, -0.05, 0, 0.05, 0.10], lo=0.10, hi=0.80),
         "tier2_months": _ints(base["tier2_months"], [-1, 0, 1, 2], lo=3),

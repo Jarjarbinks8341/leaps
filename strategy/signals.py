@@ -22,6 +22,7 @@ def bullish_divergence(
     hist: pd.Series,
     lookback: int = 20,
     min_gap: int = 5,
+    neg_hist: bool = True,
 ) -> bool:
     """Detect MACD bullish divergence at the last bar.
 
@@ -29,7 +30,8 @@ def bullish_divergence(
     - Prior low  = minimum price in [i-lookback, i-min_gap]
     - Recent low = minimum price in [i-min_gap, i]
     Divergence = price_recent < price_prior  AND  hist_recent > hist_prior
-                 AND both histogram values are negative (bearish zone)
+    If neg_hist=True (default): also require both histogram values negative.
+    If neg_hist=False: allow divergence in any MACD region (more signals).
 
     No look-ahead: only uses data up to and including the current bar.
     """
@@ -55,12 +57,10 @@ def bullish_divergence(
     hist_prior = h[n - lookback + prior_local] if n - lookback + prior_local < n else h[-lookback]
     hist_recent = h[n - min_gap + recent_local]
 
-    return (
-        price_recent < price_prior       # lower price low
-        and hist_recent > hist_prior     # higher histogram low
-        and hist_prior < 0              # both in negative (bearish) territory
-        and hist_recent < 0
-    )
+    divergence = price_recent < price_prior and hist_recent > hist_prior
+    if neg_hist:
+        return divergence and hist_prior < 0 and hist_recent < 0
+    return divergence
 
 
 def vix_elevated(vix: pd.Series, ma_window: int = 20) -> bool:
