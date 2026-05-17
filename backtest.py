@@ -26,8 +26,8 @@ DEFAULT_PARAMS: dict = {
     "vix_ma": 20,
     "target_delta": 0.60,
     "dte_days": 365,
-    "lot_size": 2,
-    "lot_max": 8,
+    "lot_pct": 0.05,
+    "lot_pct_max": 0.15,
     "min_months_remaining": 6,
     "neg_hist": True,
     "tier1_months": 4,
@@ -58,7 +58,7 @@ def run(
 
     _, _, hist = compute_macd(data["qqq"], params["macd_fast"], params["macd_slow"], params["macd_sig"])
 
-    pf = Portfolio(INITIAL_CASH, params["lot_size"])
+    pf = Portfolio(INITIAL_CASH)
 
     sub = data.loc[start:end]
     warmup = params["macd_slow"] + params["div_lookback"] + 5
@@ -79,17 +79,17 @@ def run(
             )
             signal = div and vix_elevated(v_win, params["vix_ma"])
 
-        # Dynamic lot sizing: scale between lot_size and lot_max by signal strength
+        # Dynamic lot sizing: scale lot_pct between base and max by signal strength
         step_params = params
         if signal:
             strength = signal_strength(
                 p_win, h_win, v_win,
                 params["div_lookback"], params["div_min_gap"], params["vix_ma"],
             )
-            lo = params.get("lot_size", 2)
-            hi = params.get("lot_max", lo)
-            actual_lot = max(lo, min(hi, round(lo + (hi - lo) * strength)))
-            step_params = {**params, "lot_size": actual_lot}
+            lo = params.get("lot_pct", 0.05)
+            hi = params.get("lot_pct_max", lo)
+            actual_lot_pct = lo + (hi - lo) * strength
+            step_params = {**params, "lot_pct": actual_lot_pct}
 
         pf.step(d, S, sigma, signal, step_params)
 

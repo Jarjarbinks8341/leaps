@@ -22,7 +22,7 @@ class Position:
     expiry_date: date
     strike: float
     entry_premium: float   # BSM price per share at entry
-    shares: float          # whole number: lot_size * 100
+    shares: float          # whole number: contracts * 100
 
     @property
     def cost(self) -> float:
@@ -53,9 +53,8 @@ class Position:
 
 
 class Portfolio:
-    def __init__(self, cash: float, lot_size: int = 2, max_deploy_pct: float = 0.80):
+    def __init__(self, cash: float, max_deploy_pct: float = 0.80):
         self.cash = cash
-        self.lot_size = lot_size            # contracts per signal
         self.max_deploy_pct = max_deploy_pct  # max fraction of NAV in options
         self.positions: list[Position] = []
         self.trades: list[Trade] = []
@@ -72,7 +71,7 @@ class Portfolio:
     # ── open / close ───────────────────────────────────────────────────────────
 
     def _open(self, d: date, S: float, sigma: float, params: dict) -> bool:
-        lot = int(params.get("lot_size", self.lot_size))
+        lot = int(params.get("lot_size", 1))
         T = params["dte_days"] / 365.0
         K = strike_for_delta(S, T, sigma, params["target_delta"])
         premium = call_price(S, K, T, sigma)
@@ -98,9 +97,8 @@ class Portfolio:
 
     def step(self, d: date, S: float, sigma: float, signal: bool, params: dict) -> float:
         """Process one trading day. Returns end-of-day NAV."""
-        lot       = int(params.get("lot_size", self.lot_size))
-        max_dep   = params.get("max_deploy_pct", self.max_deploy_pct)
-        min_rem   = params.get("min_months_remaining", 6)
+        max_dep = params.get("max_deploy_pct", self.max_deploy_pct)
+        min_rem = params.get("min_months_remaining", 6)
 
         # 1. DTE exit: proactively sell when < min_months_remaining to expiry
         for pos in list(self.positions):
@@ -119,21 +117,23 @@ class Portfolio:
         current_nav = self.nav(d, S, sigma)
         self.curve.append((d, current_nav))
 
-        # 4. Entry: deploy new lot if signal fires and capacity allows
+        # 4. Entry: compute whole contracts from NAV × lot_pct, FIFO if over cap
         if signal:
             T = params["dte_days"] / 365.0
             K = strike_for_delta(S, T, sigma, params["target_delta"])
             premium = call_price(S, K, T, sigma)
-            lot_cost = lot * 100 * premium
+            lot_pct = params.get("lot_pct", 0.05)
+            contracts = max(1, int(current_nav * lot_pct / (premium * 100)))
+            lot_cost = contracts * 100 * premium
 
-            # FIFO-rotate oldest until there's room under the 80% cap
+            # FIFO-rotate oldest until there's room under the NAV cap
             while (self.option_value(d, S, sigma) + lot_cost > current_nav * max_dep
                    and self.positions):
                 oldest = min(self.positions, key=lambda p: p.entry_date)
                 self._close(oldest, d, S, sigma, "fifo")
 
             if self.option_value(d, S, sigma) + lot_cost <= current_nav * max_dep:
-                self._open(d, S, sigma, params)
+                self._open(d, S, sigma, {**params, "lot_size": contracts})
 
         return self.nav(d, S, sigma)
 
