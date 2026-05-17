@@ -1,0 +1,22 @@
+{
+  "macd_fast": 8,
+  "macd_slow": 28,
+  "macd_sig": 7,
+  "div_lookback": 20,
+  "div_min_gap": 3,
+  "vix_ma": 20,
+  "target_delta": 0.6,
+  "dte_days": 430,
+  "lot_pct": 0.07,
+  "lot_pct_max": 0.25,
+  "min_months_remaining": 3,
+  "min_hold_months": 1,
+  "neg_hist": true,
+  "tier1_months": 5,
+  "tier1_profit": 0.5,
+  "tier2_months": 6,
+  "tier2_profit": 0.3,
+  "tier3_months": 9,
+  "tier3_profit": 0.1,
+  "force_months": 12
+}
