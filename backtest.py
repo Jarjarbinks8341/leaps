@@ -15,7 +15,7 @@ from strategy.data import load
 from strategy.metrics import summary, score
 from strategy.options import realized_vol
 from strategy.portfolio import Portfolio
-from strategy.signals import compute_macd, bullish_divergence, vix_elevated
+from strategy.signals import compute_macd, bullish_divergence, vix_elevated, signal_strength
 
 DEFAULT_PARAMS: dict = {
     "macd_fast": 12,
@@ -27,6 +27,7 @@ DEFAULT_PARAMS: dict = {
     "target_delta": 0.60,
     "dte_days": 365,
     "lot_size": 2,
+    "lot_max": 8,
     "min_months_remaining": 6,
     "neg_hist": True,
     "tier1_months": 4,
@@ -72,12 +73,25 @@ def run(
             p_win = data["qqq"].iloc[global_i - params["div_lookback"] : global_i + 1]
             h_win = hist.iloc[global_i - params["div_lookback"] : global_i + 1]
             v_win = data["vix"].iloc[: global_i + 1]
-            signal = bullish_divergence(
+            div = bullish_divergence(
                 p_win, h_win, params["div_lookback"], params["div_min_gap"],
                 neg_hist=params.get("neg_hist", True),
-            ) and vix_elevated(v_win, params["vix_ma"])
+            )
+            signal = div and vix_elevated(v_win, params["vix_ma"])
 
-        pf.step(d, S, sigma, signal, params)
+        # Dynamic lot sizing: scale between lot_size and lot_max by signal strength
+        step_params = params
+        if signal:
+            strength = signal_strength(
+                p_win, h_win, v_win,
+                params["div_lookback"], params["div_min_gap"], params["vix_ma"],
+            )
+            lo = params.get("lot_size", 2)
+            hi = params.get("lot_max", lo)
+            actual_lot = max(lo, min(hi, round(lo + (hi - lo) * strength)))
+            step_params = {**params, "lot_size": actual_lot}
+
+        pf.step(d, S, sigma, signal, step_params)
 
     m = summary(pf.curve, pf.trades)
     m["curve"] = pf.curve

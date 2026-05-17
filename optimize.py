@@ -26,7 +26,8 @@ PARAM_GRID: dict[str, list] = {
     "vix_ma":       [10, 20, 30],
     "target_delta": [0.50, 0.55, 0.60, 0.65, 0.70],
     "dte_days":     [300, 330, 365, 400, 430],
-    "lot_size":             [1, 2, 3, 4, 5],
+    "lot_size":             [1, 2, 3],
+    "lot_max":              [4, 6, 8, 10, 12],
     "min_months_remaining": [3, 4, 5, 6],
     "neg_hist":             [True, False],
     "tier1_months": [3, 4, 5],
@@ -49,6 +50,7 @@ def _valid(p: dict) -> bool:
         and p["tier2_months"] < p["tier3_months"]
         and p["tier3_months"] <= p["force_months"]
         and p["lot_size"] >= 1
+        and p["lot_size"] < p["lot_max"]
     )
 
 
@@ -77,7 +79,8 @@ def _make_neighborhood(base: dict) -> dict[str, list]:
         "vix_ma":       _ints(base["vix_ma"],       [-10, -5, 0, 5, 10], lo=5),
         "target_delta": _floats(base["target_delta"], [-0.10, -0.05, 0, 0.05, 0.10], lo=0.30, hi=0.85),
         "dte_days":     _ints(base["dte_days"],     [-60, -30, 0, 30, 60], lo=180),
-        "lot_size":             _ints(base["lot_size"],             [-1, 0, 1, 2], lo=1),
+        "lot_size":             _ints(base["lot_size"], [-1, 0, 1], lo=1),
+        "lot_max":              _ints(base["lot_max"],  [-2, -1, 0, 1, 2, 4], lo=2),
         "min_months_remaining": _ints(base["min_months_remaining"], [-2, -1, 0, 1, 2], lo=1),
         "neg_hist":             [True, False],
         "tier1_months": _ints(base["tier1_months"], [-1, 0, 1], lo=2),

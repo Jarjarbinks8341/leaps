@@ -69,3 +69,48 @@ def vix_elevated(vix: pd.Series, ma_window: int = 20) -> bool:
         return False
     ma = float(vix.rolling(ma_window).mean().iloc[-1])
     return float(vix.iloc[-1]) > ma
+
+
+def signal_strength(
+    prices: pd.Series,
+    hist: pd.Series,
+    vix: pd.Series,
+    lookback: int,
+    min_gap: int,
+    vix_ma_window: int,
+) -> float:
+    """Compute signal conviction [0.0, 1.0] when a divergence signal has fired.
+
+    Two components (equal weight):
+    - VIX excess: how far VIX is above its MA (caps at 60% above = 1.0)
+    - Divergence magnitude: price drop % + MACD recovery % (combined, capped at 1.0)
+    """
+    # ── VIX component ────────────────────────────────────────────────────────
+    vix_cur = float(vix.iloc[-1])
+    vix_ma  = float(vix.rolling(vix_ma_window).mean().iloc[-1])
+    vix_excess = max(0.0, (vix_cur - vix_ma) / vix_ma)  # 0 = at MA, 0.6 = 60% above
+    vix_score = min(1.0, vix_excess / 0.60)
+
+    # ── Divergence magnitude component ───────────────────────────────────────
+    n = len(prices)
+    p = prices.values
+    h = hist.values
+
+    prior_p  = p[n - lookback : n - min_gap]
+    recent_p = p[n - min_gap  : n]
+    prior_local  = prior_p.argmin()
+    recent_local = recent_p.argmin()
+
+    price_prior  = prior_p[prior_local]
+    price_recent = recent_p[recent_local]
+    hist_prior   = h[n - lookback + prior_local]
+    hist_recent  = h[n - min_gap  + recent_local]
+
+    price_drop_pct   = max(0.0, (price_prior - price_recent) / price_prior)
+    hist_denom       = max(abs(hist_prior), 1e-6)
+    hist_recovery    = max(0.0, (hist_recent - hist_prior) / hist_denom)
+
+    # price_drop_pct typically 0.01–0.10; hist_recovery typically 0.1–2.0
+    div_score = min(1.0, price_drop_pct * 8 + hist_recovery * 0.15)
+
+    return (vix_score + div_score) / 2.0
