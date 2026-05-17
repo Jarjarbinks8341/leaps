@@ -38,6 +38,8 @@ PARAM_GRID: dict[str, list] = {
     "tier3_months": [8, 9],
     "tier3_profit": [0.10, 0.15, 0.20],
     "force_months": [9, 10, 12],
+    "tp1_close_pct": [0.50, 0.67, 1.00],
+    "tp2_close_pct": [0.67, 1.00],
 }
 
 
@@ -91,6 +93,8 @@ def _make_neighborhood(base: dict) -> dict[str, list]:
         "tier3_months": _ints(base["tier3_months"], [-1, 0, 1], lo=4),
         "tier3_profit": _floats(base["tier3_profit"], [-0.05, 0, 0.05, 0.10], lo=0.10, hi=0.40),
         "force_months": _ints(base["force_months"], [-2, -1, 0, 1, 2, 4], lo=6),
+        "tp1_close_pct": [0.50, 0.67, 1.00],
+        "tp2_close_pct": [0.67, 1.00],
     }
     return spec
 

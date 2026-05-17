@@ -38,6 +38,8 @@ DEFAULT_PARAMS: dict = {
     "tier3_months": 9,
     "tier3_profit": 0.10,
     "force_months": 9,
+    "tp1_close_pct": 1.0,
+    "tp2_close_pct": 1.0,
 }
 
 INITIAL_CASH = 100_000.0

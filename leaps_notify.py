@@ -134,7 +134,7 @@ def main() -> None:
         cost = pos["entry_premium"] * pos["contracts"] * 100
         cur_value = cur_prem * pos["contracts"] * 100
 
-        exit_r = _exit_reason(months_held, pnl_pct, params)
+        exit_r = _exit_reason(months_held, pnl_pct, params, pos.get("used_tiers", []))
         if not exit_r and months_to_expiry < params.get("min_months_remaining", 4):
             exit_r = "dte"
 

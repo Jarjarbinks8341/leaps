@@ -1,5 +1,5 @@
 """Position management: open/close LEAPS, tiered exit, FIFO rotation."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import NamedTuple
 
@@ -23,6 +23,7 @@ class Position:
     strike: float
     entry_premium: float   # BSM price per share at entry
     shares: float          # whole number: contracts * 100
+    used_tiers: list = field(default_factory=list)  # tiers already partially closed
 
     @property
     def cost(self) -> float:
@@ -93,6 +94,19 @@ class Portfolio:
         self.positions.remove(pos)
         self.trades.append(Trade(pos.entry_date, d, pos.entry_premium, exit_premium, pnl, reason, pos.shares))
 
+    def _partial_close(self, pos: Position, d: date, S: float, sigma: float, reason: str, close_pct: float):
+        contracts_to_close = max(1, round(pos.contracts * close_pct))
+        if contracts_to_close >= pos.contracts:
+            self._close(pos, d, S, sigma, reason)
+            return
+        shares_to_close = contracts_to_close * 100
+        exit_premium = pos.current_premium(d, S, sigma)
+        pnl = (exit_premium - pos.entry_premium) / pos.entry_premium
+        self.cash += exit_premium * shares_to_close
+        pos.shares -= shares_to_close
+        pos.used_tiers = [*pos.used_tiers, reason]
+        self.trades.append(Trade(pos.entry_date, d, pos.entry_premium, exit_premium, pnl, f"{reason}_partial", shares_to_close))
+
     # ── daily step ─────────────────────────────────────────────────────────────
 
     def step(self, d: date, S: float, sigma: float, signal: bool, params: dict) -> float:
@@ -109,9 +123,13 @@ class Portfolio:
         for pos in list(self.positions):
             months = pos.months_held(d)
             pnl = pos.pnl_pct(d, S, sigma)
-            reason = _exit_reason(months, pnl, params)
+            reason = _exit_reason(months, pnl, params, pos.used_tiers)
             if reason:
-                self._close(pos, d, S, sigma, reason)
+                close_pct = params.get(f"{reason}_close_pct", 1.0) if reason.startswith("tp") else 1.0
+                if close_pct < 1.0:
+                    self._partial_close(pos, d, S, sigma, reason, close_pct)
+                else:
+                    self._close(pos, d, S, sigma, reason)
 
         # 3. Record NAV
         current_nav = self.nav(d, S, sigma)
@@ -138,16 +156,20 @@ class Portfolio:
         return self.nav(d, S, sigma)
 
 
-def _exit_reason(months: float, pnl: float, p: dict) -> str | None:
-    """Return exit reason string or None if position should be held."""
+def _exit_reason(months: float, pnl: float, p: dict, used_tiers: list | None = None) -> str | None:
+    """Return exit reason string or None if position should be held.
+
+    used_tiers: tiers already partially closed on this position — skipped here.
+    """
+    used = used_tiers or []
     if months > p["force_months"]:
         return "force"
     if months < p.get("min_hold_months", 0):
         return None
-    if months <= p["tier1_months"] and pnl >= p["tier1_profit"]:
+    if "tp1" not in used and months <= p["tier1_months"] and pnl >= p["tier1_profit"]:
         return "tp1"
-    if months <= p["tier2_months"] and pnl >= p["tier2_profit"]:
+    if "tp2" not in used and months <= p["tier2_months"] and pnl >= p["tier2_profit"]:
         return "tp2"
-    if months <= p["tier3_months"] and pnl >= p["tier3_profit"]:
+    if "tp3" not in used and months <= p["tier3_months"] and pnl >= p["tier3_profit"]:
         return "tp3"
     return None
