@@ -27,10 +27,17 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
 
-      - name: Commit report + IV history
+      - run: uv run leaps_notify.py
+        env:
+          SMTP_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
+          LEAPS_NAV: ${{ secrets.LEAPS_NAV }}
+
+      - name: Commit reports + IV history
         run: |
           git config --global user.name 'LEAPS-Bot'
           git config --global user.email 'leaps-bot@users.noreply.github.com'
-          git add DAILY_REPORT.md stock_prices.db
-          git diff --cached --quiet || git commit -m "Daily QQQ LEAPS signal: $(date -u +'%Y-%m-%d')"
+          git add DAILY_REPORT.md LEAPS_REPORT.md stock_prices.db positions.json
+          git diff --cached --quiet || git commit -m "Daily LEAPS signal: $(date -u +'%Y-%m-%d')"
           git push
