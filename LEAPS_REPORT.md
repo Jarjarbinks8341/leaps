@@ -1,7 +1,7 @@
-QQQ LEAPS Daily Report  2026-05-18
+QQQ LEAPS Daily Report  2026-05-19
 ────────────────────────────────────────────────────────────
-  QQQ    $    703.23
-  Vol         17.1%  (30-day realized)
+  QQQ    $    705.90
+  Vol         16.9%  (30-day realized)
   NAV    $   100,000  (LEAPS_NAV budget)
 ────────────────────────────────────────────────────────────
 
