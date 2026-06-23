@@ -1,116 +1,116 @@
-# QQQ LEAPS Signal -- 2026-06-22
+# QQQ LEAPS Signal -- 2026-06-23
 
 **Verdict: WAIT**
 
 ## Market snapshot
-- Price: $736.42  |  MA50: $695.71  |  MA200: $629.46  |  RSI14: 48.2
-- 52w high: $746.16  |  Drawdown: -1.3%
-- ATM IV30 (2026-07-24): 26.7%
+- Price: $719.08  |  MA50: $697.90  |  MA200: $630.19  |  RSI14: 42.7
+- 52w high: $746.16  |  Drawdown: -3.6%
+- ATM IV30 (2026-07-24): 29.6%
 
 ## Entry checklist
-- FAIL -- Price cheap: drawdown -1.3% (need <=-10%) OR price $736.42 <= MA200x1.02 $642.05
-- FAIL -- IV30 percentile 84% < 25 (n=31)
+- FAIL -- Price cheap: drawdown -3.6% (need <=-10%) OR price $719.08 <= MA200x1.02 $642.79
+- FAIL -- IV30 percentile 97% < 25 (n=32)
 - PASS -- No earnings in 14d
-- PASS -- RSI14 48.2 < 50 (momentum not extended)
+- PASS -- RSI14 42.7 < 50 (momentum not extended)
 
 ## LEAPS candidate (delta ~= 0.80)
-- Expiration: 2028-12-15 (907 DTE)
-- Strike: $565  |  Delta: 0.80  |  IV: 42.2%
-- Quote: bid $263.00 / ask $268.00 / mid $265.50
-- Intrinsic $171.42 + Extrinsic $94.08
-- Annualized extrinsic cost: 5.14%
+- Expiration: 2028-12-15 (906 DTE)
+- Strike: $550  |  Delta: 0.80  |  IV: 42.6%
+- Quote: bid $259.00 / ask $264.00 / mid $261.50
+- Intrinsic $169.08 + Extrinsic $92.42
+- Annualized extrinsic cost: 5.18%
 
 ---
 
-# AAPL LEAPS Signal -- 2026-06-22
+# AAPL LEAPS Signal -- 2026-06-23
 
 **Verdict: WAIT**
 
 ## Market snapshot
-- Price: $298.86  |  MA50: $289.51  |  MA200: $268.50  |  RSI14: 43.7
-- 52w high: $315.20  |  Drawdown: -5.2%
-- ATM IV30 (2026-07-24): 24.7%
+- Price: $299.10  |  MA50: $290.24  |  MA200: $268.78  |  RSI14: 34.7
+- 52w high: $315.20  |  Drawdown: -5.1%
+- ATM IV30 (2026-07-24): 23.6%
 
 ## Entry checklist
-- FAIL -- Price cheap: drawdown -5.2% (need <=-10%) OR price $298.86 <= MA200x1.02 $273.86
-- FAIL -- IV30 percentile 55% < 25 (n=29)
+- FAIL -- Price cheap: drawdown -5.1% (need <=-10%) OR price $299.10 <= MA200x1.02 $274.16
+- FAIL -- IV30 percentile 30% < 25 (n=30)
 - PASS -- No earnings in 14d
-- PASS -- RSI14 43.7 < 50 (momentum not extended)
+- PASS -- RSI14 34.7 < 50 (momentum not extended)
 
 ## LEAPS candidate (delta ~= 0.80)
-- Expiration: 2028-12-15 (907 DTE)
-- Strike: $230  |  Delta: 0.80  |  IV: 42.7%
-- Quote: bid $106.25 / ask $109.15 / mid $107.70
-- Intrinsic $68.86 + Extrinsic $38.84
-- Annualized extrinsic cost: 5.23%
+- Expiration: 2028-12-15 (906 DTE)
+- Strike: $230  |  Delta: 0.80  |  IV: 41.9%
+- Quote: bid $105.75 / ask $108.20 / mid $106.97
+- Intrinsic $69.10 + Extrinsic $37.87
+- Annualized extrinsic cost: 5.11%
 
 ---
 
-# MSFT LEAPS Signal -- 2026-06-22
+# MSFT LEAPS Signal -- 2026-06-23
 
 **Verdict: WAIT**
 
 ## Market snapshot
-- Price: $369.75  |  MA50: $412.91  |  MA200: $450.67  |  RSI14: 9.5
-- 52w high: $542.07  |  Drawdown: -31.8%
-- ATM IV30 (2026-07-24): 33.9%
+- Price: $372.92  |  MA50: $412.90  |  MA200: $449.98  |  RSI14: 16.1
+- 52w high: $542.07  |  Drawdown: -31.2%
+- ATM IV30 (2026-07-24): 34.5%
 
 ## Entry checklist
-- PASS -- Price cheap: drawdown -31.8% (need <=-10%) OR price $369.75 <= MA200x1.02 $459.68
-- FAIL -- IV30 percentile 90% < 25 (n=29)
+- PASS -- Price cheap: drawdown -31.2% (need <=-10%) OR price $372.92 <= MA200x1.02 $458.98
+- FAIL -- IV30 percentile 93% < 25 (n=30)
 - PASS -- No earnings in 14d
-- PASS -- RSI14 9.5 < 50 (momentum not extended)
+- PASS -- RSI14 16.1 < 50 (momentum not extended)
 
 ## LEAPS candidate (delta ~= 0.80)
-- Expiration: 2028-12-15 (907 DTE)
-- Strike: $280  |  Delta: 0.80  |  IV: 46.1%
-- Quote: bid $141.50 / ask $143.50 / mid $142.50
-- Intrinsic $89.75 + Extrinsic $52.75
-- Annualized extrinsic cost: 5.75%
+- Expiration: 2028-12-15 (906 DTE)
+- Strike: $285  |  Delta: 0.80  |  IV: 46.1%
+- Quote: bid $140.00 / ask $143.30 / mid $141.65
+- Intrinsic $87.92 + Extrinsic $53.73
+- Annualized extrinsic cost: 5.81%
 
 ---
 
-# BRK-B LEAPS Signal -- 2026-06-22
+# BRK-B LEAPS Signal -- 2026-06-23
 
 **Verdict: WAIT**
 
 ## Market snapshot
-- Price: $489.36  |  MA50: $479.23  |  MA200: $490.19  |  RSI14: 72.8
-- 52w high: $513.81  |  Drawdown: -4.8%
-- ATM IV30 (2026-07-24): 17.1%
+- Price: $493.20  |  MA50: $479.48  |  MA200: $490.12  |  RSI14: 73.7
+- 52w high: $513.81  |  Drawdown: -4.0%
+- ATM IV30 (2026-07-24): 17.5%
 
 ## Entry checklist
-- PASS -- Price cheap: drawdown -4.8% (need <=-10%) OR price $489.36 <= MA200x1.02 $499.99
-- PASS -- IV30 percentile 24% < 25 (n=29)
-- FAIL -- RSI14 72.8 < 50 (momentum not extended)
+- PASS -- Price cheap: drawdown -4.0% (need <=-10%) OR price $493.20 <= MA200x1.02 $499.92
+- FAIL -- IV30 percentile 37% < 25 (n=30)
+- FAIL -- RSI14 73.7 < 50 (momentum not extended)
 
 ## LEAPS candidate (delta ~= 0.80)
-- Expiration: 2028-12-15 (907 DTE)
-- Strike: $380  |  Delta: 0.80  |  IV: 38.1%
-- Quote: bid $161.50 / ask $166.00 / mid $163.75
-- Intrinsic $109.36 + Extrinsic $54.39
+- Expiration: 2028-12-15 (906 DTE)
+- Strike: $380  |  Delta: 0.80  |  IV: 38.6%
+- Quote: bid $166.00 / ask $170.00 / mid $168.00
+- Intrinsic $113.20 + Extrinsic $54.80
 - Annualized extrinsic cost: 4.48%
 
 ---
 
-# META LEAPS Signal -- 2026-06-22
+# META LEAPS Signal -- 2026-06-23
 
 **Verdict: WAIT**
 
 ## Market snapshot
-- Price: $565.69  |  MA50: $620.64  |  MA200: $654.06  |  RSI14: 40.4
-- 52w high: $790.00  |  Drawdown: -28.4%
-- ATM IV30 (2026-07-24): 35.7%
+- Price: $565.16  |  MA50: $619.31  |  MA200: $653.13  |  RSI14: 41.0
+- 52w high: $790.00  |  Drawdown: -28.5%
+- ATM IV30 (2026-07-24): 37.0%
 
 ## Entry checklist
-- PASS -- Price cheap: drawdown -28.4% (need <=-10%) OR price $565.69 <= MA200x1.02 $667.14
-- FAIL -- IV30 percentile 73% < 25 (n=26)
+- PASS -- Price cheap: drawdown -28.5% (need <=-10%) OR price $565.16 <= MA200x1.02 $666.20
+- FAIL -- IV30 percentile 89% < 25 (n=27)
 - PASS -- No earnings in 14d
-- PASS -- RSI14 40.4 < 50 (momentum not extended)
+- PASS -- RSI14 41.0 < 50 (momentum not extended)
 
 ## LEAPS candidate (delta ~= 0.80)
-- Expiration: 2028-12-15 (907 DTE)
-- Strike: $430  |  Delta: 0.80  |  IV: 50.1%
-- Quote: bid $226.00 / ask $233.00 / mid $229.50
-- Intrinsic $135.69 + Extrinsic $93.81
-- Annualized extrinsic cost: 6.68%
+- Expiration: 2028-12-15 (906 DTE)
+- Strike: $430  |  Delta: 0.80  |  IV: 51.0%
+- Quote: bid $228.00 / ask $235.00 / mid $231.50
+- Intrinsic $135.16 + Extrinsic $96.34
+- Annualized extrinsic cost: 6.87%
