@@ -1,11 +1,11 @@
-QQQ LEAPS Daily Report  2026-08-19
+QQQ LEAPS Daily Report  2026-08-20
 ────────────────────────────────────────────────────────────
-  QQQ    $    718.30
-  Vol         23.0%  (30-day realized)
+  QQQ    $    711.50
+  Vol         22.6%  (30-day realized)
   NAV    $   100,000  (LEAPS_NAV budget)
 ────────────────────────────────────────────────────────────
 
-  SIGNAL: WAIT  —  no MACD divergence | VIX not elevated
+  SIGNAL: WAIT  —  no MACD divergence
 
 ────────────────────────────────────────────────────────────
   Open Positions (0)
