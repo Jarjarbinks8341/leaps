@@ -1,21 +1,21 @@
-QQQ LEAPS Daily Report  2026-10-23
+QQQ LEAPS Daily Report  2026-10-26
 ────────────────────────────────────────────────────────────
-  QQQ    $    705.40
-  Vol         18.9%  (30-day realized)
+  QQQ    $    712.20
+  Vol         19.1%  (30-day realized)
   NAV    $   100,000  (LEAPS_NAV budget)
 ────────────────────────────────────────────────────────────
 
-  SIGNAL: BUY  —  MACD divergence + VIX elevated  (strength 0.22)
+  SIGNAL: BUY  —  MACD divergence + VIX elevated  (strength 0.14)
 
   Recommended trade:
-    Expiry   2027-12-27  (~430 DTE)
-    Strike   $754.1  (delta ~0.5)
-    Premium  ~$51.28
-    Lots     2 contracts  (lot_pct 11%)
-    Cost     ~$10,256
+    Expiry   2027-12-30  (~430 DTE)
+    Strike   $761.6  (delta ~0.5)
+    Premium  ~$52.10
+    Lots     1 contracts  (lot_pct 8%)
+    Cost     ~$5,210
 
   After filling, add to positions.json:
-  {"entry_date":"2026-10-23","expiry_date":"2027-12-27","strike":754.1,"entry_premium":<ACTUAL_FILL>,"contracts":2}
+  {"entry_date":"2026-10-26","expiry_date":"2027-12-30","strike":761.6,"entry_premium":<ACTUAL_FILL>,"contracts":1}
 
 ────────────────────────────────────────────────────────────
   Open Positions (0)
